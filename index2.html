@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apps Script 실시간 데이터 연동 시스템</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            scroll-behavior: smooth;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+        }
+        .nav-link.active {
+            color: #0284c7; /* text-sky-600 */
+            border-bottom-color: #0284c7;
+        }
+        .tab-button.active {
+            border-color: #0284c7;
+            background-color: #0284c7;
+            color: white;
+        }
+        .flow-step.active {
+            border-color: #0284c7;
+            background-color: #e0f2fe; /* bg-sky-100 */
+            transform: scale(1.05);
+        }
+        .flow-arrow {
+            font-size: 2rem;
+            color: #9ca3af; /* text-gray-400 */
+        }
+		.customBox {
+			padding: 2rem;
+			height: 31rem;
+		}
+		.half-highlight {
+			background: linear-gradient(to bottom, transparent 60%, #adff2f 105%);
+		}
+		.half-highlight-title {
+			background: linear-gradient(to bottom, transparent 70%, #4aa8d8 130%);
+		}
+		.start_btn {
+			margin-top : 8rem;
+		}
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div id="main-page" class="relative h-screen flex flex-col items-center justify-center text-center bg-gradient-to-b from-slate-50 to-white overflow-hidden">
+        <div class="absolute top-8 left-8">
+            <img src="./Hanjin_logo.svg" alt="Hanjin Group Logo" class="h-12 sm:h-16 transition-opacity hover:opacity-75">
+        </div>
+
+        <div class="px-4">
+            <p class="text-sky-600 font-semibold tracking-wide">업무 개선 프로젝트</p>
+            <h1 class="mt-2 text-4xl sm:text-6xl font-bold text-slate-900">Apps Script를 이용한</h1>
+            <h2 class="text-4xl sm:text-6xl font-bold text-sky-600 mt-2 half-highlight-title">실시간 데이터 연동 시스템</h2>
+            
+            <div class="mt-12">
+                <p class="text-xl sm:text-2xl font-bold text-slate-800">
+                    박 명 진 대리
+                </p>
+                <p class="text-base text-slate-500 mt-1">(한진물류그룹 | 그룹사사업팀)</p>
+            </div>
+
+            <button id="start-presentation-btn" class="mt-12 bg-sky-600 text-white font-bold py-3 px-10 rounded-lg text-lg hover:bg-sky-700 transition duration-300 transform hover:scale-105 shadow-lg shadow-sky-500/20 start_btn">
+                시작하기 →
+            </button>
+        </div>
+
+        <div class="absolute bottom-10 left-1/2 -translate-x-1/2 w-full px-4">
+            <div class="flex flex-col items-center">
+                <p>
+                <div class="flex items-center justify-center space-x-12">
+                    <img src="https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png" alt="Google Logo" class="h-8 sm:h-9 transition-opacity hover:opacity-75">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Google_Sheets_logo_%282014-2020%29.svg/1498px-Google_Sheets_logo_%282014-2020%29.svg.png" alt="Spread Sheet Logo" class="h-10 sm:h-12 transition-opacity hover:opacity-75">
+                    <img src="./apps-script-logo.png" alt="Apps Script Logo" class="h-10 sm:h-12 transition-opacity hover:opacity-75">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="presentation-page" class="hidden">
+        <header id="header" class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
+            <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-xl font-bold text-sky-600">Apps Script 데이터 입력 간편화 보고서</h1>
+                    </div>
+                    <div class="hidden md:block">
+                        <div class="ml-10 flex items-baseline space-x-4">
+                            <a href="#intro" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:text-sky-600 border-b-2 border-transparent">소개</a>
+                            <a href="#process" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:text-sky-600 border-b-2 border-transparent">동작 방식</a>
+                            <a href="#impact" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:text-sky-600 border-b-2 border-transparent">기대 효과</a>
+                            <a href="#tech" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:text-sky-600 border-b-2 border-transparent">기술 정보</a>
+                            
+                            <div class="relative" id="dropdown-container">
+                                <button id="dropdown-button" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:text-sky-600 border-b-2 border-transparent flex items-center">
+                                    <span>적용 문서 바로가기</span>
+                                    <svg class="w-4 h-4 ml-1 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </button>
+                                <div id="dropdown-menu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-slate-200">
+                                    <a href="https://docs.google.com/spreadsheets/d/1JTyu17LicYiZ8teUmsqyxSHkg8Z65CjtB8j3MJwlqAg/edit?gid=1824593112#gid=1824593112" target="_blank" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-sky-600">TMS ↗</a>
+									<a href="../Google Sheet & Apps Script 데이터 추출 자동화/Apps Script 데이터 추출 자동화_발표자료.html" target="_blank" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-sky-600">(번외)통합차량관제 ↗</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </header>
+
+        <main>
+            <section id="intro" class="py-20 sm:py-24">
+                <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                    <h2 class="text-base font-semibold text-sky-600 tracking-wide uppercase">Google Apps Script 프로젝트</h2>
+                    <p class="mt-2 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">데이터 입력 프로세스 편의 개선</p>
+                    <p class="mt-6 max-w-2xl mx-auto text-lg text-slate-600">
+                        TMS 내에서 발생하는 수동 오더 입력 작업을 간편화하고, <br><span class="half-highlight">TMS와 실시간으로 연동하여 업무 효율성과 데이터 정확성을 향상시킵니다.</span>
+                    </p>
+                </div>
+                <div class="container mx-auto px-4 sm:px-6 lg:px-8 mt-16">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
+                        <div class="bg-white p-8 rounded-xl shadow-md border border-gray-200">
+                            <h3 class="text-2xl font-bold text-red-600 mb-4">문제점 (As-Is)</h3>
+                            <ul class="space-y-3 text-slate-600">
+                                <li class="flex items-start"><span class="text-red-500 mr-3 mt-1">✘</span><div><strong>오입력 가능성:</strong> 계약명, 고객사 등 텍스트 직접 입력 시 인적 오류(Human Error) 발생 위험</div></li>
+                                <li class="flex items-start"><span class="text-red-500 mr-3 mt-1">✘</span><div><strong>데이터 단절:</strong> Excel 입력 후, TMS 시스템에 별도로 업로드해야 하는 이중 작업 발생</div></li>
+                                <li class="flex items-start"><span class="text-red-500 mr-3 mt-1">✘</span><div><strong>낮은 편의성:</strong> 입력 가능한 항목을 매번 확인하거나, 다른 문서를 참조해야 하는 불편함</div></li>
+                                <li class="flex items-start"><span class="text-red-500 mr-3 mt-1">✘</span><div><strong>지연된 오류 확인:</strong> 필수값이 누락되어도 TMS 시스템에 입력하는 시점에야 오류를 인지 가능</div></li>
+                            </ul>
+                        </div>
+                        <div class="bg-white p-8 rounded-xl shadow-md border border-gray-200">
+                            <h3 class="text-2xl font-bold text-green-600 mb-4">개선 방안 (To-Be)</h3>
+                            <ul class="space-y-3 text-slate-600">
+                                <li class="flex items-start"><span class="text-green-500 mr-3 mt-1">✔</span><div><strong>동적 드롭다운 메뉴:</strong> 셀 선택 값에 따라 다음 선택 목록을 가져와 드롭다운으로 제공</div></li>
+                                <li class="flex items-start"><span class="text-green-500 mr-3 mt-1">✔</span><div><strong>원클릭 데이터 전송:</strong> 상태 값 변경으로 해당 행의 데이터가 즉시 TMS로 자동 전송 및 저장</div></li>
+                                <li class="flex items-start"><span class="text-green-500 mr-3 mt-1">✔</span><div><strong>실시간 유효성 검증:</strong> '확정' 시 필수값 누락 여부를 먼저 체크하고, 사용자에게 즉시 피드백</div></li>
+                                <li class="flex items-start"><span class="text-green-500 mr-3 mt-1">✔</span><div><strong>처리 결과 시각화:</strong> 전송 성공/실패 여부를 명확하게 표시하여 직관성 향상</div></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="process" class="py-20 sm:py-24 bg-white">
+                <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="text-center">
+                        <h2 class="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">💡 시스템 동작 방식</h2>
+                        <p class="mt-4 max-w-2xl mx-auto text-lg text-slate-600">
+                            모든 프로세스는 사용자의 간단한 셀 편집 동작에서 시작되어 자동으로 처리됩니다.
+                        </p>
+                    </div>
+                    <div class="mt-16">
+                        <div class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-0">
+                            <div id="step-1" class="flow-step p-4 border-2 rounded-lg cursor-pointer transition duration-300 w-full md:w-48 text-center active">
+                                <div class="text-3xl mb-2">🖱️</div>
+                                <h4 class="font-bold">1. 셀 편집 (Trigger)</h4>
+                                <p class="text-sm text-slate-500">사용자가 셀 값 변경</p>
+                            </div>
+                            <div class="flow-arrow hidden md:block mx-4">→</div>
+                            <div id="step-2" class="flow-step p-4 border-2 rounded-lg cursor-pointer transition duration-300 w-full md:w-48 text-center">
+                                <div class="text-3xl mb-2">📡</div>
+                                <h4 class="font-bold">2. API 요청</h4>
+                                <p class="text-sm text-slate-500">편집된 셀 정보 전송</p>
+                            </div>
+                            <div class="flow-arrow hidden md:block mx-4">→</div>
+                            <div id="step-3" class="flow-step p-4 border-2 rounded-lg cursor-pointer transition duration-300 w-full md:w-48 text-center">
+                                <div class="text-3xl mb-2">📦</div>
+                                <h4 class="font-bold">3. 데이터 수신</h4>
+                                <p class="text-sm text-slate-500">서버로부터 JSON 응답</p>
+                            </div>
+                            <div class="flow-arrow hidden md:block mx-4">→</div>
+                            <div id="step-4" class="flow-step p-4 border-2 rounded-lg cursor-pointer transition duration-300 w-full md:w-48 text-center">
+                                <div class="text-3xl mb-2">✨</div>
+                                <h4 class="font-bold">4. 시트 업데이트</h4>
+                                <p class="text-sm text-slate-500">드롭다운 생성/값 삽입</p>
+                            </div>
+                            <div class="flow-arrow hidden md:block mx-4">→</div>
+                            <div id="step-5" class="flow-step p-4 border-2 rounded-lg cursor-pointer transition duration-300 w-full md:w-48 text-center">
+                                <div class="text-3xl mb-2">💾</div>
+                                <h4 class="font-bold">5. 데이터 확정</h4>
+                                <p class="text-sm text-slate-500">'확정' 시 서버로 전송</p>
+                            </div>
+                        </div>
+                        <div id="process-description" class="mt-12 bg-sky-50 p-8 rounded-lg min-h-[150px] border border-sky-200">
+                            <h4 id="desc-title" class="text-xl font-bold text-sky-700 mb-2">1. 셀 편집 (Trigger)</h4>
+                            <p id="desc-content" class="text-slate-700">사용자가 Google Sheets에서 특정 열(예: 계약명, 요율 등)의 셀 값을 편집합니다. Apps Script의 `onEdit(e)` 트리거가 이 변경을 실시간으로 감지하여 스크립트를 실행합니다.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="impact" class="py-20 sm:py-24">
+                <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="text-center">
+                        <h2 class="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">💡 핵심 성과 및 기대 효과</h2>
+                        <p class="mt-4 max-w-2xl mx-auto text-lg text-slate-600">
+                            단순한 편의성 개선을 넘어, 데이터 관리의 패러다임을 전환합니다.
+                        </p>
+                    </div>
+                    <div class="mt-16 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                        <div class="bg-white p-8 rounded-xl shadow-md border border-gray-200 customBox">
+                            <h3 class="text-xl font-bold mb-4 text-center">오더 입력 시간 비교</h3>
+                            <div class="chart-container">
+                                <canvas id="impactChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="space-y-6">
+                            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                                <h4 class="font-bold text-lg">📈 데이터 정합성 획기적 향상</h4>
+                                <p class="text-slate-600 mt-1">시스템이 제공하는 선택지로만 입력(선택)이 가능해져 오타, 잘못된 정보 입력 등 인적 오류를 원천적으로 차단합니다.</p>
+                            </div>
+                            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                                <h4 class="font-bold text-lg">📈 업무 생산성 증대</h4>
+                                <p class="text-slate-600 mt-1">데이터 입력과 시스템 전송이 Google Sheets 내에서 한 번에 해결되어 이중 작업이 사라지고, 업무 처리 속도가 크게 향상됩니다.</p>
+                            </div>
+                            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                                <h4 class="font-bold text-lg">📈 사용자 경험(UX) 개선</h4>
+                                <p class="text-slate-600 mt-1">복잡한 코드나 기준 정보를 외울 필요 없이, 마치 잘 설계된 웹 서비스처럼 직관적인 인터페이스(드롭다운)를 통해 업무를 처리할 수 있습니다.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="tech" class="py-20 sm:py-24 bg-white">
+                <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="text-center">
+                        <h2 class="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">💡 기술 상세 정보</h2>
+                        <p class="mt-4 max-w-2xl mx-auto text-lg text-slate-600">
+                            본 시스템을 구현하고 운영하는 데 사용된 핵심 기술과 설정 정보입니다.
+                        </p>
+                    </div>
+                    <div class="mt-12 max-w-4xl mx-auto">
+                        <div class="mb-4 flex justify-center border-b border-gray-200">
+                            <button class="tab-button active py-2 px-4 -mb-px border-b-2 font-medium text-sm" data-tab="trigger">핵심 트리거</button>
+                            <button class="tab-button py-2 px-4 -mb-px border-b-2 font-medium text-sm text-gray-500" data-tab="urlfetch">API 호출 옵션</button>
+                            <button class="tab-button py-2 px-4 -mb-px border-b-2 font-medium text-sm text-gray-500" data-tab="service">주요 서비스</button>
+                            <button class="tab-button py-2 px-4 -mb-px border-b-2 font-medium text-sm text-gray-500" data-tab="server">API 서버 요구사항</button>
+                        </div>
+                        <div id="tab-content" class="bg-slate-50 p-6 rounded-lg border">
+                            <div id="trigger" class="tab-panel">
+                                <h3 class="font-bold text-lg mb-4">onEdit(e) Simple Trigger</h3>
+                                <p class="mb-6 text-slate-600">사용자가 셀을 수정할 때마다 자동으로 실행되는 이벤트 핸들러입니다. 별도 설정 없이 즉시 동작하며, 이벤트 객체 `e`를 통해 변경된 셀의 위치, 값 등의 정보를 받아 로직을 분기합니다.</p>
+                                <div class="bg-slate-800 text-white p-4 rounded-md text-sm font-mono overflow-x-auto">
+<pre><code>function onEditCell(e) {
+  var range = e.range;
+  var editedColumn = range.getColumn();
+  
+  if (editedColumn == 7) { // '계약명' 열이 수정되면
+    // 계약명에 맞는 데이터 API로 요청
+  } else if (editedColumn == 32) { // '상태' 열이 '확정'으로 바뀌면
+    // 해당 행 데이터 서버로 전송
+  }
+}</code></pre>
+                                </div>
+                            </div>
+                            <div id="urlfetch" class="tab-panel hidden">
+                                <h3 class="font-bold text-lg mb-4">UrlFetchApp 주요 옵션</h3>
+                                 <p class="mb-4 text-slate-600">내부 TMS API 서버와 안정적으로 통신하기 위한 핵심 옵션입니다.</p>
+                                <div class="bg-slate-800 text-white p-4 rounded-md text-sm font-mono overflow-x-auto">
+<pre><code>const options = {
+  'method': 'post',
+  'contentType': 'application/json',
+  'payload': JSON.stringify(data),
+  'muteHttpExceptions': true,
+  'validateHttpsCertificates': false,
+};</code></pre>
+                                </div>
+                                <ul class="mt-4 space-y-2 text-slate-600">
+                                    <li><strong>muteHttpExceptions: true</strong> - API 에러(4xx, 5xx) 발생 시 스크립트가 중단되지 않고, 응답 코드를 받아 직접 오류를 처리할 수 있게 합니다. (예: 사용자에게 '오류' 상태 표시)</li>
+                                    <li><strong>validateHttpsCertificates: false</strong> - 내부망의 사설 HTTPS 인증서 사용 시 유효성 검사를 건너뛰어 정상 통신을 가능하게 합니다. <br><small>*주의: 공인된 인증서가 아닌 개발/내부망 환경에서만 사용*</small></li>
+                                </ul>
+                            </div>
+                            <div id="service" class="tab-panel hidden">
+                                <h3 class="font-bold text-lg mb-4">핵심 Apps Script 서비스</h3>
+                                <ul class="space-y-4">
+                                    <li><code class="bg-slate-200 text-sm p-1 rounded">SpreadsheetApp</code>: 시트, 셀, 범위(Range)에 접근하고 값을 읽거나 쓰는 등 Google Sheets를 제어하는 핵심 서비스</li>
+                                    <li><code class="bg-slate-200 text-sm p-1 rounded">UrlFetchApp</code>: 외부 시스템(TMS API 서버)과 HTTP 통신을 수행하여 데이터를 주고받는 서비스</li>
+                                    <li><code class="bg-slate-200 text-sm p-1 rounded">PropertiesService</code>: API URL 등 자주 변경될 수 있는 설정 값을 코드와 분리하여 안전하게 저장하고 관리하는 서비스</li>
+                                    <li><code class="bg-slate-200 text-sm p-1 rounded">HtmlService / Ui</code>: '로딩 중' 팝업이나 알림창 등 사용자 인터페이스를 생성하여 상호작용을 돕는 서비스</li>
+                                </ul>
+                            </div>
+                            <div id="server" class="tab-panel hidden">
+                                <h3 class="font-bold text-lg mb-4">API 서버 요구사항</h3>
+                                <ul class="space-y-3 list-disc list-inside text-slate-600">
+                                    <li><strong>엔드포인트:</strong> Apps Script의 요청을 받을 수 있는 외부 공개용 URL 엔드포인트가 필요 (POST 방식 지원)</li>
+                                    <li><strong>CORS 설정:</strong> Google 도메인(`*.google.com`, `*.googleusercontent.com`)에서의 요청을 허용하도록 CORS(Cross-Origin Resource Sharing) 정책 설정 필요</li>
+                                    <li><strong>방화벽(Inbound):</strong> <a href="https://www.gstatic.com/ipranges/goog.json" target="_blank" class="text-sky-600 hover:underline">Google의 공식 IP 대역</a> 전체에 대한 인바운드 트래픽을 허용해야 `UrlFetchApp`의 접근이 가능함</li>
+                                    <li><strong>데이터 형식:</strong> 요청과 응답 본문(body)은 JSON 형식을 표준으로 사용</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="bg-slate-800 text-white">
+            <div class="container mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-sm">
+                <p>Google Sheets & Apps Script 실시간 데이터 연동 시스템</p>
+				<p>박명진 대리(한진물류그룹 | 그룹사사업팀)</p>
+            </div>
+        </footer>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const processSteps = {
+                    'step-1': { title: '1. 셀 편집 (Trigger)', content: '사용자가 Google Sheets에서 특정 열(예: 계약명, 요율 등)의 셀 값을 편집합니다. Apps Script의 `onEdit(e)` 트리거가 이 변경을 실시간으로 감지하여 스크립트를 실행합니다.' },
+                    'step-2': { title: '2. API 요청', content: '스크립트는 변경된 셀의 값과 위치 정보를 바탕으로, 다음에 필요한 데이터(예: 계약명에 해당하는 고객사 목록)를 API 서버로 `UrlFetchApp`을 통해 POST 방식으로 요청합니다.' },
+                    'step-3': { title: '3. 데이터 수신', content: 'API 서버는 요청받은 값(key)에 해당하는 데이터를 DB에서 조회하여, Apps Script가 처리하기 쉬운 표준 JSON 형식으로 응답합니다.' },
+                    'step-4': { title: '4. 시트 업데이트', content: '스크립트는 수신한 JSON 데이터를 파싱하여, 관련된 다른 셀의 값을 자동으로 채우거나, 여러 개의 선택항목이 있는 경우 해당 셀에 드롭다운(데이터 확인 규칙)을 동적으로 생성합니다.' },
+                    'step-5': { title: '5. 데이터 확정', content: '사용자가 모든 항목 입력을 완료하고 상태 열을 \'확정\'으로 변경하면, `onEdit(e)` 트리거가 이를 감지하여 해당 행의 전체 데이터를 최종적으로 TMS API 서버에 전송하여 데이터베이스에 저장(Insert)합니다.' }
+                };
+                const flowSteps = document.querySelectorAll('.flow-step');
+                const descTitle = document.getElementById('desc-title');
+                const descContent = document.getElementById('desc-content');
+
+                flowSteps.forEach(step => {
+                    step.addEventListener('click', () => {
+                        flowSteps.forEach(s => s.classList.remove('active'));
+                        step.classList.add('active');
+                        const stepData = processSteps[step.id];
+                        descTitle.textContent = stepData.title;
+                        descContent.textContent = stepData.content;
+                    });
+                });
+                
+                const ctx = document.getElementById('impactChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['기존 수동 입력', '시스템 도입 후'],
+                        datasets: [{
+                            label: '작업 시간(분)',
+                            data: [3, 0.5],
+                            backgroundColor: ['rgba(239, 68, 68, 0.6)', 'rgba(34, 197, 94, 0.6)'],
+                            borderColor: ['rgba(239, 68, 68, 1)', 'rgba(34, 197, 94, 1)'],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: { y: { beginAtZero: true, title: { display: true, text: '작업 시간(분)' } } },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { callbacks: { label: function(context) { return (context.dataset.label || '') + ': ' + context.parsed.y + '분'; } } }
+                        }
+                    }
+                });
+
+                const tabButtons = document.querySelectorAll('.tab-button');
+                const tabPanels = document.querySelectorAll('.tab-panel');
+                tabButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        tabButtons.forEach(btn => btn.classList.remove('active'));
+                        button.classList.add('active');
+                        const targetTab = button.getAttribute('data-tab');
+                        tabPanels.forEach(panel => {
+                            if (panel.id === targetTab) {
+                                panel.classList.remove('hidden');
+                            } else {
+                                panel.classList.add('hidden');
+                            }
+                        });
+                    });
+                });
+
+                const sections = document.querySelectorAll('section');
+                const navLinks = document.querySelectorAll('a.nav-link');
+                const observerOptions = { root: null, rootMargin: '0px', threshold: 0.4 };
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            navLinks.forEach(link => {
+                                link.classList.remove('active');
+                                if (link.getAttribute('href') === `#${entry.target.id}`) {
+                                    link.classList.add('active');
+                                }
+                            });
+                        }
+                    });
+                }, observerOptions);
+                sections.forEach(section => { observer.observe(section); });
+
+                const dropdownContainer = document.getElementById('dropdown-container');
+                const dropdownButton = document.getElementById('dropdown-button');
+                const dropdownMenu = document.getElementById('dropdown-menu');
+
+                dropdownButton.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                    dropdownMenu.classList.toggle('hidden');
+                });
+
+                window.addEventListener('click', function (event) {
+                    if (!dropdownContainer.contains(event.target)) {
+                        dropdownMenu.classList.add('hidden');
+                    }
+                });
+            });
+        </script>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const mainPage = document.getElementById('main-page');
+            const presentationPage = document.getElementById('presentation-page');
+            const startBtn = document.getElementById('start-presentation-btn');
+
+            startBtn.addEventListener('click', function() {
+                mainPage.classList.add('hidden');
+                presentationPage.classList.remove('hidden');
+                window.scrollTo(0, 0);
+            });
+        });
+    </script>
+</body>
+</html>
